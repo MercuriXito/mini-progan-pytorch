@@ -3,7 +3,7 @@ options for ProGAN
 """
 
 import argparse
-from data import get_mnist, get_cifar10, get_fashion, get_svhn, get_unlabeled_celebA, get_folder_dataset
+from data import get_mnist, get_cifar10, get_fashion, get_svhn, get_unlabeled_celebA, get_folder_dataset, get_resolution
 
 def get_normal_options(parser):
     # parameters in training
@@ -50,9 +50,12 @@ def get_progan_options():
     opt = parser.parse_args()
 
     # 懒得写那么多命令行参数，就直接在这改8.
-    opt.batch_size = 4
-    opt.data_name = "folder"
-    opt.data_path = "/home/victorchen/workspace/Aristotle/StyleGAN_PyTorch/FFHQ"
+    # opt.batch_size = 4 # progressive training 时动态决定
+    opt.data_name = "folder_res" # mulit-resolution dataset
+    # opt.data_path = "/home/victorchen/workspace/Aristotle/StyleGAN_PyTorch/FFHQ"
+    opt.data_path = "/home/victorchen/workspace/ReImplement/mini-progan-torch/dataset/ffhq/"
+    opt.lrD = 0.001
+    opt.lrG = 0.001
     return opt
 
 
@@ -82,6 +85,8 @@ def choose_dataset(opt):
         data = get_unlabeled_celebA(opt.data_path, opt.batch_size, opt.num_workers, opt.input_size)
     elif data_name == "folder":
         data = get_folder_dataset(opt.data_path, opt.batch_size, opt.num_workers, opt.input_size)
+    elif data_name == "folder_res":
+        data = get_resolution(opt.data_path, opt.input_size, opt.batch_size, opt.num_workers)
     else:
         raise NotImplementedError("Not implemented dataset: {}".format(data_name))
     return data

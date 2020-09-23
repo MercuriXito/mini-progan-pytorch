@@ -9,7 +9,7 @@ import torchvision.transforms as T
 
 import PIL.Image as Image
 
-from utils import test_and_add_postfix_dir
+from utils import test_and_add_postfix_dir, TensorImageUtils
 
 def get_mnist(path, batch_size, num_workers, input_size=64):
 
@@ -131,6 +131,48 @@ def get_folder_dataset(path, batch_size, num_workers, input_size=256):
     ]))
 
     return DataLoader(data, batch_size=batch_size, num_workers=num_workers, shuffle=True)
+
+# =======================================================
+# Dataset for loading dataset with different resolution.
+# Use preprocess.py to generate images with different resolution.
+
+class MultiResolutionDataset(Dataset):
+    def __init__(self, path, res=4, transform=None, compatible=True):
+        self.path = test_and_add_postfix_dir(path)
+        self.res = res
+        self.real_path = path + "data_{}x{}".format(res, res) + os.sep
+        if not os.path.exists(self.real_path):
+            raise OSError("No such resolution path: {}".format(self.real_path))
+        self.transform = transform
+        self.compatible = compatible
+        self.ilist = os.listdir(self.real_path)
+
+    def __len__(self):
+        return len(self.ilist)
+
+    def __getitem__(self, idx):
+
+        image = self.ilist[idx]
+        image = Image.open(self.real_path + image)
+
+        # image = image.convert("RGB")
+
+        if self.transform:
+            image = self.transform(image)
+
+        if self.compatible:
+            return image, 0
+        return image
+
+
+def get_resolution(path, input_size, batch_size, num_workers):
+
+    data = MultiResolutionDataset(path, input_size, transform=T.Compose([
+        T.ToTensor(),
+        T.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+        ]))
+    return DataLoader(data, batch_size=batch_size, num_workers=num_workers, shuffle=True)
+
 
 if __name__ == '__main__':
 

@@ -153,7 +153,16 @@ class ProGenerator(nn.Module):
             PixelNorm(),
         )
 
-        self.rgbconverters = nn.ModuleList([Conv2d(outc, 3, 1, 1)]) # TODO: add bias apply after conv2d
+        self.rgbconverters = nn.ModuleList([])
+        def add_torgb(in_channels):
+            self.rgbconverters.append(
+                nn.Sequential(
+                    Conv2d(in_channels, 3, 1, 1),
+                    BiasApply(3)
+                )
+            )
+
+        add_torgb(outc)
 
         # build remaining block iteratively
         for r in range(2, self.res):
@@ -172,7 +181,7 @@ class ProGenerator(nn.Module):
             ]
 
             self.net.append(nn.Sequential(*block))
-            self.rgbconverters.append(Conv2d(outc, 3, 1, 1))
+            add_torgb(outc)
         self.up = Upsample()
 
     def forward(self, z, depth, alpha):
