@@ -7,6 +7,11 @@ from tqdm import tqdm
 
 from utils import test_and_add_postfix_dir
 
+"""
+Preprocess the images, translate original images to different resolution as to speed up 
+loading in DataLoader
+"""
+
 tores = lambda x: int(log2(x))
 fromres = lambda x: 2 ** x
 
@@ -49,8 +54,7 @@ def get_options():
 
 def main():
     opt = get_options()
-    setattr(opt, "path", "/home/victorchen/workspace/Aristotle/StyleGAN_PyTorch/FFHQ"
-)
+    setattr(opt, "path", "/home/victorchen/workspace/Aristotle/StyleGAN_PyTorch/FFHQ")
     setattr(opt, "dpath", "./dataset/ffhq/")
     preprocess(opt.path, opt.dpath, opt.sr, opt.er)
 

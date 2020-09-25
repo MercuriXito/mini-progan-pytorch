@@ -1,6 +1,7 @@
 import os, sys, time, json
 from torchvision.utils import make_grid, save_image
 from torch import save, load
+import torch
 from math import ceil
 
 import matplotlib.pyplot as plt
@@ -25,34 +26,6 @@ def json_dump(obj, filename):
 def save_opt(root, opt):
     json_dump(opt._get_kwargs(), root + "config.json")
 
-class Logger:
-    """ Logger 一大意义在于不用写那么多 root 了。
-    """
-    def __init__(self, root):
-        self.root = root
-
-    def log_config(self, opt):
-        pass
-
-def grid_plot(arr, ncols=8):
-    """ show batch of numpy-array, arr should be size of (NxHxW) or (NxHxWxC) for color image
-    """
-    cm = None
-    if len(arr.shape) == 3:
-        cm = plt.cm.binary_r
-    elif len(arr.shape) == 4:
-        cm = plt.cm.rainbow
-    else:
-        raise Exception("Size of arr {} should be 3 or 4".format(len(arr.shape)))
-
-    bs = arr.shape[0]
-    fig = plt.figure()
-    nrows = ceil(bs / ncols)
-    for i in range(bs):
-        ax = fig.add_subplot(nrows, ncols, i + 1)
-        ax.imshow(arr[i,:], cmap = cm)
-    return fig
-
 def save_images(images, root, filename, nrow = 8):
     save_image(images, root + filename, nrow=nrow, normalize=True, range=(-1,1))
 
@@ -64,6 +37,8 @@ def show_images(images, nrow = 8, img_range = (-1, 1)):
                     images, nrow=nrow, range=img_range
                 ).cpu().detach().numpy().transpose((1,2,0))
     return grid
+
+#============== visualize utils ================
 
 class TensorImageUtils:
     """Base Class of Tensor-Image utils functions including showing and saving the result images,
@@ -100,9 +75,25 @@ class TensorImageUtils:
                    nrow=nrow, normalize=self.normalize, range=self.img_range)
 
 
+def partial_generate(netG, z, batch_size, **kws):
+    """ generate images with netG and z, but use `batch_size` number of images in forward
+    for avoiding excceeding the gpu memory.
+    """
+    total_num = z.size(0)
+    num = 0
+    images = []
+    while(num < total_num):
+        part_z = z[num * batch_size: min(total_num, (num + 1) * batch_size), :]
+        if part_z.size(0) == 0: break
+        with torch.no_grad():
+            part_image = netG(part_z, **kws)
+        images.append(part_image)
+        num += 1
+    if len(images) == 1:
+        return images[0]
+    else:
+        return torch.cat(images, dim=0)
+
+
 if __name__ == "__main__":
-    
-    import numpy as np
-    arr = np.random.randn(8, 32, 32, 3)
-    fig = grid_plot(arr, 4)
-    plt.show()
+    pass

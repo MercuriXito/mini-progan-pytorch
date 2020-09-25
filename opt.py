@@ -30,32 +30,47 @@ def get_normal_options(parser):
 
 
 def get_resume_options(parser):
-    parser.add_argument("--resume", action="store_true", help="resuem training")
+    parser.add_argument("--resume", action="store_true", help="resume training")
     parser.add_argument("--model-dir", default="null", type=str, help="folder which saves netG.pth and netD.pth")
+    parser.add_argument("--resume-resolution", default=4, help="resumed model's resolution")
     return parser
-
 
 def get_options():
     parser = argparse.ArgumentParser()
     parser = get_normal_options(parser)
     return parser.parse_args()
 
-
 def get_progan_options():
     parser = argparse.ArgumentParser()
     parser = get_normal_options(parser)
     parser = get_resume_options(parser)
 
-    parser.add_argument("-res", "--resolution", default=256, type=int, help="input resolution")
+    # parameters related in loss
+    parser.add_argument("-lgp", "--lambda-gp", default=10, type=float, help="lambda of gradient penalty term in WGAN-GP-Loss")
+    parser.add_argument("-edrift", "--epsilon-drift", default=0.001, type=float, help="epsilon of additional drift loss term in original paper.")
+
+    # parameters related in progressive growing training
+    parser.add_argument("-sres", "--start-resolution", default=4, type=int, help="resolution to start from in training")
+    parser.add_argument("-eres", "--end-resolution", default=1024, type=int, help="resolution of end in training")
+    parser.add_argument("-mdepth" "--max-depth", default=10, type=int, help="max depth to constructr ProGAN Model with output resolution: ${2^{md}x2^{md}$")
+    parser.add_argument("--train-stablize-first", default=True, type=bool, help="always train from the stablized phase of last resolution")
+    parser.add_argument("-nimgs", "--num-images", default=600, type=float, help="number of images in each training phase")
+    parser.add_argument("-dimz", "--dim-z", default=512, type=int, help="dimension of latent space")
+
     opt = parser.parse_args()
 
-    # 懒得写那么多命令行参数，就直接在这改8.
-    # opt.batch_size = 4 # progressive training 时动态决定
+    # self-defined for different settings
     opt.data_name = "folder_res" # mulit-resolution dataset
     # opt.data_path = "/home/victorchen/workspace/Aristotle/StyleGAN_PyTorch/FFHQ"
     opt.data_path = "/home/victorchen/workspace/ReImplement/mini-progan-torch/dataset/ffhq/"
     opt.lrD = 0.001
     opt.lrG = 0.001
+    opt.num_workers = 4 # recommend small num_worker
+    opt.start_resolution = 4 
+    opt.end_resolutoin = 64
+    opt.max_depth = 10
+    opt.train_stablize_first = True
+    opt.num_images = 300
     return opt
 
 

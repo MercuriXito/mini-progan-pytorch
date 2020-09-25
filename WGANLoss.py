@@ -21,5 +21,6 @@ def calculate_gradient_penalty(netD, images, fake_images, gp_lambda, device, *ar
 
         return gp_lambda * ((grads.norm(p=2, dim = 1) - 1) ** 2).mean()
 
+
 if __name__ == "__main__":
     pass
