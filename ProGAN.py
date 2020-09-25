@@ -1,12 +1,4 @@
-"""
-Minimum Implementation of ProGAN, for default settings:
-    + Mini-Stddev Layer
-    + Weight scale during forward
-    + PixelNorm after every 3x3 conv layer
-    + Apply bias
-
-progressive method:
-    + 
+""" Minimum Implementation of ProGAN, for default settings: + Mini-Stddev Layer + Weight scale during forward + PixelNorm after every 3x3 conv layer + Apply bias progressive method: + 
 
 """
 
@@ -17,6 +9,10 @@ import torch.nn.functional as F
 from math import log2
 
 def lerp(a, b, t): return a * t + b * (1 - t)
+
+def change_requires_grad(module, requires_grad=False):
+    for param in module.parameters():
+        param.requires_grad(requires_grad)
 
 class BiasApply(nn.Module):
     """ noise after some activation layer, noise added to each channel
@@ -210,6 +206,17 @@ class ProGenerator(nn.Module):
 
         else: # last layer
             return self.rgbconverters[0](x)
+
+    # TODO: freeze option
+    def freeze_by_depth(self, depth):
+        """ freeze unused layers in training to avoid unneccesary calculation.
+        """
+        pass
+
+
+    # TODO: unfreeze option
+    def unfreeze_by_depth(self, depth):
+        pass
 
 
 class ProDiscriminator(nn.Module):

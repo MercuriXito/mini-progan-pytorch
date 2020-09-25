@@ -8,7 +8,7 @@ from ProGAN import ProGenerator
 from utils import TensorImageUtils
 from math import log2
 
-model_path = "tmp/save_22_08_09/netG64x64.pt"
+model_path = "tmp/save_22_41_33/netG64x64.pt"
 max_resolution = 1024
 
 resolution = 64 # resolution for output

@@ -6,13 +6,13 @@ Quiet Simple ProGAN implementation with pytorch.
 
 64x64 training results (On FFHQ Dataset)
 
-![64x64images](inference.png)
+| random samples | interpolation in latent space |
+| -- | -- |
+| ![64x64images](inference.png) | ![64x64walk](walk.png) |
 
-Flaws: (1) **Wired artifacts or strokes around faces and background**. Things term to be really bad around the edges of faces.
+I'm still showing 300k images instead of 600k or 800k in settings suggested in paper due to limitation of computation. 
 
-The WGANLoss in training with 64x64 images is not as stable as that in training with lower resolution, might need more training images with higher resolution (I just showed 300k images in this training setting.)
-
-Next step: try to increse number of showed images and check the codes and trained models completely.
+After fix some bugs about optimizer, generated images get better but still behave bad sometimes in terms of background synthesis and some details (faces always look better if the background is simple or dark). Increasing the batch size, simply showing more images or training the model to higher resolution would help.
 
 ## Plans
 

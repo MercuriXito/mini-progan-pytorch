@@ -52,6 +52,7 @@ save_epoch_interval = opt.save_epoch_interval
 dim_z = 512
 netD = ProDiscriminator(resolution=resolution)
 netG = ProGenerator(resolution=resolution)
+
 if use_cuda:
     netD.cuda()
     netG.cuda()
@@ -84,7 +85,17 @@ max_num_blocks = max_res - 2
 depths = [-1] + [ i // 2 for i in range(max_num_blocks * 2)] # predefined depths
 dynamic_batch_size = [32, 32, 32, 32, 16, 10, 6, 3, 2] # predefined batch size to avoid excceeding gpu memory
 
+optimizer_D = optim.Adam(netD.parameters(), lr=lr_D, betas=betas)
+optimizer_G = optim.Adam(netG.parameters(), lr=lr_G, betas=betas)
+
 #------------------ Training -------------------------
+
+# BUGS: TODO:
+# changing the optimizer would discard the momentum information 
+# for momentum-based optimizer, and it would lead to unstable gradient.
+# But I'd like to freeze some layers during training, to save the gpu memory and avoid unnessacery gradient calculation.
+
+# TODO: TrainParamManage class
 
 def get_optimizer_by_depth(depth):
 
@@ -104,13 +115,13 @@ def get_optimizer_by_depth(depth):
         optimizer_D = optim.Adam([
             {"params": netD.last.parameters()},     
             {"params": netD.act.parameters()},              
-            {"params": netD.rgbconverters[nblocks-depth-1:].parameters()}, 
+            {"params": netD.rgbconverters[nblocks-depth-1].parameters()}, 
             {"params": netD.net[nblocks-depth-1:].parameters()} 
             ], lr=lr_D, betas=betas)
 
         optimizer_G = optim.Adam([
             {"params": netG.first.parameters()},
-            {"params": netG.rgbconverters[:depth+2].parameters()},
+            {"params": netG.rgbconverters[depth+1].parameters()}, # only train rgbconverters at present resolution.
             {"params": netG.net[:depth+1].parameters()}
             ], lr=lr_G, betas=betas)
 
@@ -123,6 +134,8 @@ starttime = time.clock()
 criterion = nn.BCEWithLogitsLoss()
 zero = torch.tensor(0, dtype=torch.float).to(device)
 one = torch.tensor(1, dtype=torch.float).to(device)
+
+tfix_noise = torch.randn((max(dynamic_batch_size), dim_z), dtype=torch.float32).to(device)
 
 # progressive training.
 iter_step = 0
@@ -146,11 +159,12 @@ for i, depth in enumerate(depths):
     print("Using batch_size: {}".format(bs))
 
     # fixed noise
-    fix_noise = torch.randn((bs, dim_z), dtype=torch.float32).to(device)
+    fix_noise = tfix_noise[:min(bs, tfix_noise.size(0)),:]
     setattr(opt, "nrow", bs)
 
     # ============ redefine optimizer ======================
-    optimizer_D, optimizer_G = get_optimizer_by_depth(depth)
+    ## Should not change optimizer, this would lead to unstable gradient.
+    # optimizer_D, optimizer_G = get_optimizer_by_depth(depth)
 
     # =========== training =================================
     image_step = 0
@@ -223,12 +237,19 @@ for i, depth in enumerate(depths):
             if image_step >= num_images:
                 break
 
+            if (image_step + 1) % 30000 == 0:
+                with torch.no_grad():
+                    fake = netG(fix_noise, depth, alpha)
+                utiler.save_images(fake, "fake{}x{}_{}.png".format(res, res, image_step), nrow=opt.nrow)
+
         with torch.no_grad():
             fake = netG(fix_noise, depth, alpha)
         # save
         save_model(netG, save_path, "netG{}x{}.pt".format(res, res))
         save_model(netD, save_path, "netD{}x{}.pt".format(res, res))
         utiler.save_images(fake, "fake{}x{}.png".format(res, res), nrow=opt.nrow)
+        save_model(optimizer_G, save_path, "optimG{}x{}.pt".format(res, res))
+        save_model(optimizer_D, save_path, "optimD{}x{}.pt".format(res, res))
 
         
 endtime = time.clock()
