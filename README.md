@@ -10,7 +10,7 @@ Quiet Simple ProGAN implementation with pytorch.
 | -- | -- |
 | ![64x64images](inference.png) | ![64x64walk](walk.png) |
 
-I'm still showing 300k images instead of 600k or 800k in settings suggested in paper due to limitation of computation. 
+Lastest results trained with 600k images in one phase.
 
 After fix some bugs about optimizer, generated images get better but still behave bad sometimes in terms of background synthesis and some details (faces always look better if the background is simple or dark). Increasing the batch size, simply showing more images or training the model to higher resolution would help.
 

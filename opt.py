@@ -7,8 +7,8 @@ from data import get_mnist, get_cifar10, get_fashion, get_svhn, get_unlabeled_ce
 
 def get_normal_options(parser):
     # parameters in training
-    parser.add_argument("--lrD", default=2e-4, type=float, help="Learning rate of Discriminator")
-    parser.add_argument("--lrG", default=2e-4, type=float, help="Learning rate of Generator")
+    parser.add_argument("--lrD", default=1e-3, type=float, help="Learning rate of Discriminator")
+    parser.add_argument("--lrG", default=1e-3, type=float, help="Learning rate of Generator")
     parser.add_argument("--epochs", default=10, type=int, help="Total epochs in training")
     parser.add_argument("--save-epoch-interval", default=1, type=int, help="interval of epoch for saving model")
     parser.add_argument("--cuda", default=True, type=bool, help="using cuda")
@@ -52,7 +52,7 @@ def get_progan_options():
     # parameters related in progressive growing training
     parser.add_argument("-sres", "--start-resolution", default=4, type=int, help="resolution to start from in training")
     parser.add_argument("-eres", "--end-resolution", default=1024, type=int, help="resolution of end in training")
-    parser.add_argument("-mdepth" "--max-depth", default=10, type=int, help="max depth to constructr ProGAN Model with output resolution: ${2^{md}x2^{md}$")
+    parser.add_argument("-mdepth", "--max-depth", default=10, type=int, help="max depth to constructr ProGAN Model with output resolution: ${2^{md}x2^{md}$")
     parser.add_argument("--train-stablize-first", default=True, type=bool, help="always train from the stablized phase of last resolution")
     parser.add_argument("-nimgs", "--num-images", default=600, type=float, help="number of images in each training phase")
     parser.add_argument("-dimz", "--dim-z", default=512, type=int, help="dimension of latent space")
@@ -62,15 +62,14 @@ def get_progan_options():
     # self-defined for different settings
     opt.data_name = "folder_res" # mulit-resolution dataset
     # opt.data_path = "/home/victorchen/workspace/Aristotle/StyleGAN_PyTorch/FFHQ"
-    opt.data_path = "/home/victorchen/workspace/ReImplement/mini-progan-torch/dataset/ffhq/"
-    opt.lrD = 0.001
-    opt.lrG = 0.001
+    # opt.data_path = "/home/victorchen/workspace/ReImplement/mini-progan-torch/dataset/ffhq/"
+    opt.data_path = "/home/victorchen/workspace/Venus/resolution/FFHQ/"
     opt.num_workers = 4 # recommend small num_worker
-    opt.start_resolution = 4 
-    opt.end_resolutoin = 64
+    opt.start_resolution = 4
+    opt.end_resolutoin = 32
     opt.max_depth = 10
     opt.train_stablize_first = True
-    opt.num_images = 300
+    opt.num_images = 600
     return opt
 
 

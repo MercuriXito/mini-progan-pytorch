@@ -8,8 +8,8 @@ from ProGAN import ProGenerator
 Visualize: Generate a serial of fade-in images
 """
 
-folder="tmp/save_13_52_44/"
-num_alphas=10
+folder="tmp/save_22_48_01/"
+num_alphas=0
 num_alphas += 1
 fixed_batch_size = 64
 nrow=8
@@ -35,7 +35,7 @@ for i, depth in enumerate(depths):
     res = int(pow(2, depth + 3))
     netG.load_state_dict(torch.load(folder + "netG{}x{}.pt".format(res, res)))
 
-    if num_alphas == 0:
+    if num_alphas == 1:
         alphas = [1.0]
     else:
         alphas = torch.linspace(0, 1, steps=num_alphas)

@@ -24,6 +24,7 @@ from WGANLoss import calculate_gradient_penalty
 from ProGAN import ProGenerator, ProDiscriminator
 
 tores = lambda x: int(log2(x))
+fromres = lambda x: 2 ** x
 #------------------ config by options ---------------------
 
 # persistence related configuration
@@ -32,12 +33,18 @@ test_and_make_dir(save_path)
 writer = SummaryWriter(save_path)
 utiler = TensorImageUtils(save_path)
 
+# wait here
+for i in range(45):
+    time.sleep(60)
+    print("Waiting %2d minutes" %(i+1))
+
 # training related configuration
 device = torch.device("cuda" if opt.cuda and torch.cuda.is_available() else "cpu")
 
 # model parameters
 min_res = tores(4)
 max_res = opt.max_depth
+max_resolution = fromres(max_res)
 
 # start_res, end_res 控制需要训练的 blocks.
 start_res = max(min_res, tores(opt.start_resolution))
@@ -48,8 +55,8 @@ depths = [-1] + [ i // 2 for i in range(max_num_blocks * 2)] # predefined depths
 dynamic_batch_size = [32, 32, 32, 32, 16, 10, 6, 3, 2] # predefined batch size to avoid excceeding gpu memory
 
 # define model here
-netD = ProDiscriminator(resolution=max_res)
-netG = ProGenerator(resolution=max_res)
+netD = ProDiscriminator(resolution=max_resolution)
+netG = ProGenerator(resolution=max_resolution)
 
 # load pre-trained model
 if opt.resume:
@@ -91,8 +98,8 @@ for i, depth in enumerate(depths):
     stablize = (i % 2 == 0)
 
     res = 2 ** (depth + 3)
-    if res < opt.start_resolution or res > opt.end_resolution: continue # train in resolution range
-    if opt.train_stablize_first and res == opt.start_resolution and not stablize: continue # start from resolution and stabliaztoin mode
+    if res < start_res or res > end_res: continue # train in resolution range
+    if opt.train_stablize_first and res == start_res and not stablize: continue # start from resolution and stabliaztoin mode
 
     print("depth:{} - res:{}x{} - training mode:{}".format(
         depth, res, res, "stablize" if stablize else "progressive"
