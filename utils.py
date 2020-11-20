@@ -3,6 +3,9 @@ from torchvision.utils import make_grid, save_image
 from torch import save, load
 import torch
 from math import ceil
+import PIL.Image as im
+
+from tqdm import tqdm
 
 import matplotlib.pyplot as plt
 
@@ -74,6 +77,13 @@ class TensorImageUtils:
         save_image(images, self.root + filename,
                    nrow=nrow, normalize=self.normalize, range=self.img_range)
 
+    def save_images_independently(self, images, img_names):
+        
+        assert len(img_names) == images.size(0), "img_names shoud be the same size of images"
+        images = self.preprocessor(images)
+        for image, name in zip(images, img_names):
+            image = image.cpu().detach().numpy().transpose((1,2,0))
+
 
 def partial_generate(netG, z, batch_size, **kws):
     """ generate images with netG and z, but use `batch_size` number of images in forward
@@ -94,6 +104,33 @@ def partial_generate(netG, z, batch_size, **kws):
     else:
         return torch.cat(images, dim=0)
 
+def mass_inference(netG, save_dir="inference", sample_func=None, device="cuda", latent_dim=512, numbers=10000, batch_size=64, **kws):
+    """ Massive generation for evaluation
+    """
+
+    if sample_func is None:
+        sample_func = lambda x: torch.randn((x, latent_dim)).to(device)
+
+    root = test_and_add_postfix_dir(save_dir)
+    test_and_make_dir(root)
+
+    utiler = TensorImageUtils(root)
+    idx = 0
+    prefix = "test"
+    num_iter = numbers // batch_size + (numbers % batch_size != 0)
+    for i in tqdm(range(num_iter)):
+        bs = min(numbers - idx, batch_size)
+
+        z = sample_func(bs)
+        names = [ "{}_{}.png".format(prefix, n) for n in range(idx, idx + bs)]
+        with torch.no_grad():
+            images = netG(z, **kws)
+        for image, name in zip(images, names):
+            utiler.save_images(image.unsqueeze(dim=0), name, nrow=1)
+        # utiler.save_images_independently(images, names)
+        idx += bs
+
+    print("Ok")
 
 if __name__ == "__main__":
     pass

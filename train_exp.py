@@ -33,11 +33,6 @@ test_and_make_dir(save_path)
 writer = SummaryWriter(save_path)
 utiler = TensorImageUtils(save_path)
 
-# wait here
-for i in range(45):
-    time.sleep(60)
-    print("Waiting %2d minutes" %(i+1))
-
 # training related configuration
 device = torch.device("cuda" if opt.cuda and torch.cuda.is_available() else "cpu")
 
@@ -77,6 +72,13 @@ first_stablize_train = True
 optimizer_D = optim.Adam(netD.parameters(), lr=opt.lrD, betas=opt.adam_betas)
 optimizer_G = optim.Adam(netG.parameters(), lr=opt.lrG, betas=opt.adam_betas)
 
+if opt.resume:
+    resume_res = opt.resume_resolution
+    optimG_name = "optimG{}x{}.pt".format(resume_res, resume_res)
+    optimD_name = "optimD{}x{}.pt".format(resume_res, resume_res)
+    optimizer_D.load_state_dict(torch.load(model_path + optimD_name))
+    optimizer_G.load_state_dict(torch.load(model_path + optimG_name))
+
 #------------------ Training -------------------------
 
 print("Start Training, using {}".format(device))
@@ -98,8 +100,8 @@ for i, depth in enumerate(depths):
     stablize = (i % 2 == 0)
 
     res = 2 ** (depth + 3)
-    if res < start_res or res > end_res: continue # train in resolution range
-    if opt.train_stablize_first and res == start_res and not stablize: continue # start from resolution and stabliaztoin mode
+    if res < opt.start_resolution or res > opt.end_resolution: continue # train in resolution range
+    if opt.train_stablize_first and res == opt.start_resolution and not stablize: continue # start from resolution and stabliaztoin mode
 
     print("depth:{} - res:{}x{} - training mode:{}".format(
         depth, res, res, "stablize" if stablize else "progressive"
