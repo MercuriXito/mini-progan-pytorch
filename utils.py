@@ -122,7 +122,7 @@ def mass_inference(netG, save_dir="inference", sample_func=None, device="cuda", 
         bs = min(numbers - idx, batch_size)
 
         z = sample_func(bs)
-        names = [ "{}_{}.png".format(prefix, n) for n in range(idx, idx + bs)]
+        names = [ f"{n:08}.png" for n in range(idx, idx + bs)]
         with torch.no_grad():
             images = netG(z, **kws)
         for image, name in zip(images, names):

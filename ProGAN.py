@@ -42,7 +42,7 @@ class FC(nn.Module):
         self.he_std = 2 ** 0.5 * (1 / fan_in) ** 0.5
 
     def forward(self, x):
-        return F.linear(x, self.weights / self.he_std, self.bias)
+        return F.linear(x, self.weights * self.he_std, self.bias)
 
 
 class Conv2d(nn.Module):
@@ -316,9 +316,9 @@ def test_model(depth, alpha):
     print(netD)
     z = torch.randn((1, 512))
     x = netG(z, depth, alpha)
-    print(x.size())
+    print(x.mean())
     y = netD(x, depth, alpha)
-    print(y.size())
+    print(y.mean())
 
 
 if __name__ == '__main__':
